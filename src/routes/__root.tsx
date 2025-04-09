@@ -1,34 +1,29 @@
-// import { useQueryState } from "nuqs";
 import React, { useEffect } from 'react'
+import { observer } from 'mobx-react-lite'
 import { Layout, ThemeProvider } from '@tinkerbells/xenon-ui'
-// import * as React from "react";
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 
-import { useAppDispatch } from '../store/store'
-import { useGetTableForTablesQuery } from '../api/apiSlice'
+import { useDatasetStore } from '../stores/RootStore'
+import { useGetTableForTables } from '../api/queryHooks'
 import { MenuHeader } from '../components/Header/MenuHeader'
-import { updateSelectedTableDataset } from '../store/features/tableForTable/tableForTableSlice'
-// import { useQueryState } from "nuqs";
 
-export const Route = createRootRoute({
-  component: RootComponent,
-})
+// Using observer HOC to make component reactive to MobX state changes
+const RootComponent = observer(() => {
+  // Use MobX store instead of Redux
+  const datasetStore = useDatasetStore()
 
-function RootComponent() {
-  const { data: dbTablesData = [] } = useGetTableForTablesQuery()
-  // const [selectedDatasetId, setSelectedDatasetId] = useQueryState('datasetId');
-  const dispatch = useAppDispatch()
+  // Use React Query hook instead of RTK Query
+  const { data: dbTablesData = [] } = useGetTableForTables()
 
   useEffect(() => {
-    if (dbTablesData) {
-      dispatch(
-        updateSelectedTableDataset({
-          id: dbTablesData[0]?.id,
-          physicalName: dbTablesData[0]?.physical_name,
-        }),
+    if (dbTablesData && dbTablesData.length > 0) {
+      // Call MobX store method instead of dispatching Redux action
+      datasetStore.updateSelectedTableDataset(
+        dbTablesData[0]?.id,
+        dbTablesData[0]?.physical_name,
       )
     }
-  }, [dbTablesData, dispatch])
+  }, [dbTablesData, datasetStore])
 
   return (
     <React.Fragment>
@@ -42,4 +37,10 @@ function RootComponent() {
       </ThemeProvider>
     </React.Fragment>
   )
-}
+})
+
+export default RootComponent
+
+export const Route = createRootRoute({
+  component: RootComponent,
+})

@@ -1,17 +1,14 @@
+// src/components/Pages/MainPage/components/CreateTableModal.tsx
 import type { FC } from 'react'
 
 import { useState } from 'react'
-import { nanoid } from '@reduxjs/toolkit'
-
-import '../main-page.scss'
-
+import { observer } from 'mobx-react-lite'
 import { Button, Input, Modal } from '@tinkerbells/xenon-ui'
 
-import { getCurrentTimeISO } from '../utils/utils'
+import '../main-page.scss'
 import { DEFAULT_STATE } from '../../../../consts/globalConsts'
-import { useAppDispatch, useAppSelector } from '../../../../store/store'
-import { useLazyGetSpecificFiltersQuery } from '../../../../api/apiSlice'
-import { setOlapReportPageParametrs } from '../../../../store/features/olapReposrtsPagesSlice/olapReposrtsPagesSlice'
+import { useCreateOlapReport } from '../../../../api/useOlapQueries'
+import { useDatasetStore, useUIStore } from '../../../../stores/RootStore'
 
 interface CreateTableModalProps {
   isModalOpen: boolean
@@ -19,15 +16,15 @@ interface CreateTableModalProps {
   handleCancel: () => void
 }
 
-export const CreateTableModal: FC<CreateTableModalProps> = (props) => {
+export const CreateTableModal: FC<CreateTableModalProps> = observer((props) => {
   const { isModalOpen, handleOk, handleCancel } = props
   const [pivotTableName, setPivotTableName] = useState(DEFAULT_STATE.STRING)
-  const dbTableDataset = useAppSelector(
-    state => state.tableForTables.dbTableDataset,
-  )
-  // const {data: specificFilters = []} = useGetSpecificFiltersQuery({physicalName:dbTableDataset.physicalName});
-  const [triggerGetSpecificFilters] = useLazyGetSpecificFiltersQuery()
-  const dispatch = useAppDispatch()
+
+  // MobX stores
+  const uiStore = useUIStore()
+
+  // React Query hooks
+  const { createNewOlapReport } = useCreateOlapReport()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -35,41 +32,22 @@ export const CreateTableModal: FC<CreateTableModalProps> = (props) => {
   }
 
   const handleCreateOlap = async () => {
-    if (dbTableDataset.physicalName) {
-      const result = await triggerGetSpecificFilters({
-        physicalName: dbTableDataset.physicalName,
-      })
+    uiStore.setButtonFetching(true)
 
-      if (!result?.data) {
-        // console.error('No data received from the API');
-        return
-      }
-      // const filters = result.data;
+    try {
+      // Create new OLAP report using React Query hook
+      await createNewOlapReport()
 
-      console.log(result.data)
-
-      if (result.data) {
-        const pageId = nanoid()
-        dispatch(
-          setOlapReportPageParametrs({
-            // creator,
-            datasetId: dbTableDataset.id,
-            // id,
-            // modifier,
-            // table,
-            timemark: getCurrentTimeISO(),
-            versionName: pivotTableName,
-            physicalName: dbTableDataset.physicalName,
-            // versionRequest,
-            filters: result.data,
-            pageId,
-          }),
-        )
-      }
+      // Close modal and reset name
+      setPivotTableName(DEFAULT_STATE.STRING)
+      handleOk()
     }
-
-    setPivotTableName(DEFAULT_STATE.STRING)
-    handleOk()
+    catch (error) {
+      console.error('Error creating new OLAP report:', error)
+    }
+    finally {
+      uiStore.setButtonFetching(false)
+    }
   }
 
   return (
@@ -104,9 +82,8 @@ export const CreateTableModal: FC<CreateTableModalProps> = (props) => {
           placeholder="Введите название отчета"
           onChange={handleChange}
           value={pivotTableName}
-          // value={tableName}
         />
       </div>
     </Modal>
   )
-}
+})

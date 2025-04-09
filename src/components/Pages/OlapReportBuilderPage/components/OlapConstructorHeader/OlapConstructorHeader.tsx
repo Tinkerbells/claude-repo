@@ -1,11 +1,12 @@
 import type { FC } from 'react'
 
+import { observer } from 'mobx-react-lite'
 import { useEffect, useState } from 'react'
 import { Outlet } from '@tanstack/react-router'
 import { Button, Flex, Typography } from '@tinkerbells/xenon-ui'
 
 import { DEFAULT_STATE } from '@/consts/globalConsts'
-import { usePageParams } from '@/hooks/usePageParams'
+import { useOlapConfigStore } from '@/stores/RootStore'
 import { ATTRIBUTES_TYPES } from '@/consts/pivotTableConsts'
 import { ArrowDownOutlined, ArrowUpOutlined } from '@/assets/Icons'
 import { OlapReportConstructor } from '@/components/Layout/OlapReportConstructor/OlapReportConstructor'
@@ -15,18 +16,22 @@ interface Props {
   pageId: string
 }
 
-export const OlapConstructorHeader: FC<Props> = ({ handleCollapse, pageId }) => {
+export const OlapConstructorHeader: FC<Props> = observer(({ handleCollapse, pageId }) => {
   const [isOpen, setIsOpen] = useState(true)
   const [attributesCount, setAttributesCount] = useState(DEFAULT_STATE.NUMBER)
-  const selectedAttributesCount = usePageParams(pageId).constructorParametrs.allAttributes
+
+  const olapConfigStore = useOlapConfigStore()
+
+  const allAttributes = olapConfigStore.allAttributes
   const selectedAttributesTitle = `(Использовано: ${attributesCount})`
 
   useEffect(() => {
-    const assignedAttributes = selectedAttributesCount.filter(
+    const assignedAttributes = allAttributes.filter(
       item => item.type !== ATTRIBUTES_TYPES.NOT_ASSIGNED,
     )?.length
+
     setAttributesCount(assignedAttributes)
-  }, [selectedAttributesCount])
+  }, [allAttributes])
 
   const toggleCollapse = () => {
     setIsOpen(!isOpen)
@@ -62,4 +67,4 @@ export const OlapConstructorHeader: FC<Props> = ({ handleCollapse, pageId }) => 
       <Outlet />
     </div>
   )
-}
+})

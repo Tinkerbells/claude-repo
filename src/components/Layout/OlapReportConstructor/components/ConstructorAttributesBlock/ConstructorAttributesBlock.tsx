@@ -1,15 +1,10 @@
-import type { FC } from 'react'
-import type {
-  DragEndEvent,
-  UniqueIdentifier,
-} from '@dnd-kit/core'
-import type {
-  ColumnDef,
-  ColumnFiltersState,
-} from '@tanstack/react-table'
-
-import { useCallback, useMemo, useState } from 'react'
+import { observer } from 'mobx-react-lite'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import {
+  useCallback,
+  useMemo,
+  useState,
+} from 'react'
 import {
   arrayMove,
   SortableContext,
@@ -43,31 +38,25 @@ import {
   Typography,
 } from '@tinkerbells/xenon-ui'
 
-import type { ConstructorAttributeType } from '@/types/olapReportPage'
-
-import { useAppDispatch } from '@/store/store'
-import { subTableSelectOptions } from '@/consts/pivotTableConsts'
-import { setConstructorAllAttributesParametrs, updateAttributeType } from '@/store/features/olapReposrtsPagesSlice/olapReposrtsPagesSlice'
-
+import { useOlapConfigStore } from '../../../../../stores/RootStore'
+import { subTableSelectOptions } from '../../../../../consts/pivotTableConsts'
 import { DraggableRow, RowDragHandleCell } from '../TableDndComponants/TableDndComponents'
 
 interface Props {
-  constrcutorAllAttributes: ConstructorAttributeType[]
   pageId: string
 }
 
-export const ConstructorAttributesBlock: FC<Props> = ({
-  constrcutorAllAttributes,
-  pageId,
-}) => {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const dataIds = useMemo<UniqueIdentifier[]>(
-    () => constrcutorAllAttributes.map(({ attributeId }) => attributeId),
-    [constrcutorAllAttributes],
-  )
-  const totalAttributesCount = `(Всего: ${constrcutorAllAttributes.length})`
+export const ConstructorAttributesBlock = observer(({ pageId }: Props) => {
+  const [columnFilters, setColumnFilters] = useState([])
+  const olapConfigStore = useOlapConfigStore()
+  const constructorAllAttributes = olapConfigStore.allAttributes
 
-  const dispatch = useAppDispatch()
+  const dataIds = useMemo(
+    () => constructorAllAttributes.map(({ attributeId }) => attributeId),
+    [constructorAllAttributes],
+  )
+
+  const totalAttributesCount = `(Всего: ${constructorAllAttributes.length})`
 
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
@@ -77,18 +66,12 @@ export const ConstructorAttributesBlock: FC<Props> = ({
 
   const handleTypeChange = useCallback(
     (attribute: string, type: string) => {
-      dispatch(
-        updateAttributeType({
-          pageId,
-          attribute,
-          type,
-        }),
-      )
+      olapConfigStore.updateAttributeType(attribute, type)
     },
-    [dispatch, pageId],
+    [olapConfigStore],
   )
 
-  const columns = useMemo<ColumnDef<ConstructorAttributeType>[]>(
+  const columns = useMemo(
     () => [
       {
         id: 'drag-handle',
@@ -103,7 +86,6 @@ export const ConstructorAttributesBlock: FC<Props> = ({
           <Checkbox
             checked={table.getIsAllPageRowsSelected()}
             onChange={(value) => {
-              // console.log(value);
               table.toggleAllPageRowsSelected(!!value.target.checked)
             }}
             aria-label="Select all"
@@ -125,7 +107,6 @@ export const ConstructorAttributesBlock: FC<Props> = ({
         id: 'attribute',
         cell: ({ row }) => {
           return row.original.attributePlaceholder
-          // ?? row.original.attributeName
         },
         header: () => 'Атрибуты',
         enableColumnFilter: true,
@@ -135,7 +116,6 @@ export const ConstructorAttributesBlock: FC<Props> = ({
         id: 'type',
         cell: ({ row }) => {
           const attribute = row.original.attributeName
-          // console.log(attributeSelectedParametrs)
           return (
             <Select
               className="select__attributes-table"
@@ -151,15 +131,11 @@ export const ConstructorAttributesBlock: FC<Props> = ({
         },
       },
     ],
-    [
-      handleTypeChange,
-    ],
-
+    [handleTypeChange],
   )
 
   const table = useReactTable({
-    // data: attributesTableData,
-    data: constrcutorAllAttributes ?? [],
+    data: constructorAllAttributes ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: row => row.attributeId,
@@ -168,13 +144,13 @@ export const ConstructorAttributesBlock: FC<Props> = ({
     state: { columnFilters },
   })
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event) => {
     const { active, over } = event
     if (active && over && active.id !== over.id) {
       const oldIndex = dataIds.indexOf(active.id)
       const newIndex = dataIds.indexOf(over.id)
-      const newData = arrayMove(constrcutorAllAttributes, oldIndex, newIndex)
-      dispatch(setConstructorAllAttributesParametrs({ pageId, allAttributes: newData }))
+      const newData = arrayMove(constructorAllAttributes, oldIndex, newIndex)
+      olapConfigStore.setConstructorAllAttributesParametrs(newData)
     }
   }
 
@@ -200,8 +176,8 @@ export const ConstructorAttributesBlock: FC<Props> = ({
           const searchValue = event.target.value
           table.getColumn('attribute')?.setFilterValue(searchValue)
         }}
-
       />
+
       <ScrollArea className="scroll-area">
         <DndContext
           collisionDetection={closestCenter}
@@ -248,4 +224,4 @@ export const ConstructorAttributesBlock: FC<Props> = ({
       </ScrollArea>
     </div>
   )
-}
+})

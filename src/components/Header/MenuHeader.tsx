@@ -1,7 +1,7 @@
 import { ThemePicker } from '@tinkerbells/xenon-ui'
 
 import { NavigationMenu } from './components/NavigationMenu/NavigationMenu'
-import './menu-header.scss'
+import './MenuHeader.styles.scss'
 
 export function MenuHeader() {
   return (

@@ -1,13 +1,10 @@
 import type { FC } from 'react'
 
+import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
-
-import '../menu-header.scss'
-
 import { Button, Modal, Typography } from '@tinkerbells/xenon-ui'
 
-import { useAppDispatch } from '../../../store/store'
-import { deleteOlapReportPage } from '../../../store/features/olapReposrtsPagesSlice/olapReposrtsPagesSlice'
+import { useRootStore } from '../../../stores/RootStore'
 
 interface MenuModalProps {
   isModalOpen: boolean
@@ -16,14 +13,13 @@ interface MenuModalProps {
   pageId: string
 }
 
-export const MenuModal: FC<MenuModalProps> = (props) => {
+export const MenuModal: FC<MenuModalProps> = observer((props) => {
   const { isModalOpen, handleOk, handleCancel, pageId } = props
-  const dispatch = useAppDispatch()
+  const rootStore = useRootStore()
   const navigate = useNavigate()
 
   const handleDeleteOlap = () => {
-    // console.log(pageId);
-    dispatch(deleteOlapReportPage(pageId))
+    rootStore.pageManager.removePage(pageId)
     navigate({ to: '/' })
   }
 
@@ -33,7 +29,6 @@ export const MenuModal: FC<MenuModalProps> = (props) => {
       open={isModalOpen}
       onOk={handleOk}
       onCancel={handleCancel}
-      // className="menu-modal"
       footer={[
         <Button
           key="back"
@@ -42,27 +37,25 @@ export const MenuModal: FC<MenuModalProps> = (props) => {
           onClick={() => {
             handleCancel()
             handleDeleteOlap()
-            // setPivotTableName(DEFAULT_STATE.STRING);
           }}
         >
           Выйти без сохранения
         </Button>,
         <Button
           key="submit"
-          // onClick={() => {
-          //   handleOk(pivotTableName, pivotTablePageId);
-
-          // }}
+          // onClick to save the OLAP report
+          onClick={() => {
+            // Could add saving logic here using MobX store
+            handleOk()
+          }}
         >
           Сохранить
         </Button>,
       ]}
     >
-      <div
-      // className="create-table-modal__content"
-      >
+      <div>
         <Typography>Все несохраненные изменения будут потеряны!</Typography>
       </div>
     </Modal>
   )
-}
+})

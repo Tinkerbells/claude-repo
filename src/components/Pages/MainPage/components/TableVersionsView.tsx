@@ -1,11 +1,12 @@
+// src/components/Pages/MainPage/components/TableVersionsView.tsx
 import type { FC } from 'react'
 import type {
   ColumnDef,
   RowSelectionState,
 } from '@tanstack/react-table'
 
-import { nanoid } from '@reduxjs/toolkit'
-import { memo, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { observer } from 'mobx-react-lite'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -27,247 +28,196 @@ import { formatDate } from '../utils/utils'
 import { CreateTableModal } from './CreateTableModal'
 import { DataTable } from '../../../UI/DataTable/DataTable'
 import { InfoCircleOutlined } from '../../../../assets/Icons'
-import { useLazyGetOlapQuery } from '../../../../api/apiSlice'
-import { useAppDispatch, useAppSelector } from '../../../../store/store'
+import { useLoadOlapReport } from '../../../../api/useOlapQueries'
 import { EmptyTableWithHeader } from '../../../UI/DataTable/EmptyTableWithHeader'
-import { setOlapReportPageParametrs } from '../../../../store/features/olapReposrtsPagesSlice/olapReposrtsPagesSlice'
-// import { useNavigate } from "@tanstack/react-router";
+import { useOlapConfigStore, usePageManager } from '../../../../stores/RootStore'
 
 interface TableVersionsProps {
   tableData: DBTableVersionApiType[]
+  isLoading: boolean
 }
 const maxTablePagesCount = 5
 
-export const TableVersionsView: FC<TableVersionsProps> = memo(
-  ({ tableData }) => {
-    console.log(tableData)
-    // const { data: tableVersionsData = [] } = useGetVersionsForTableQuery(
-    //   { datasetIdToGetVersions },
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-    const selectedKey = Object.keys(rowSelection).find(
-      key => rowSelection[key],
-    )
-    const selectedVersionId = selectedKey ? Number(selectedKey) : 0
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const tableBuilderPages = useAppSelector(
-      state => state.olapReportsPages.pages,
-    )
-    const iscreateTableButtonActive
-      = tableBuilderPages.length < maxTablePagesCount
-    const isChooseButtonActive
-      = tableData.length !== 0
-        && tableBuilderPages.length < maxTablePagesCount
-        && selectedVersionId !== 0
-    const [triggerGetOlap] = useLazyGetOlapQuery()
-    const dispatch = useAppDispatch()
-    // const navigate = useNavigate();
+export const TableVersionsView: FC<TableVersionsProps> = observer(({ tableData, isLoading }) => {
+  // Use MobX stores
+  const pageManager = usePageManager()
 
-    const columns = useMemo<ColumnDef<DBTableVersionApiType>[]>(
-      () => [
-        {
-          id: 'radio',
-          header: () => '',
-          cell: ({ row }) => {
-            // console.log(row);
-            return (
-              <Radio
-                checked={rowSelection[row.original.id] === true}
-                onChange={() => {
-                  const id = row.original.id
-                  setRowSelection({ [id]: true })
-                }}
-              />
-            )
-          },
+  // Component state
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Get selected version ID
+  const selectedKey = Object.keys(rowSelection).find(
+    key => rowSelection[key],
+  )
+  const selectedVersionId = selectedKey ? Number(selectedKey) : 0
+
+  // Check if buttons should be active
+  const currentOpenPages = pageManager.openPages
+  const isCreateTableButtonActive = currentOpenPages.length < maxTablePagesCount
+  const isChooseButtonActive
+    = tableData.length !== 0
+      && currentOpenPages.length < maxTablePagesCount
+      && selectedVersionId !== 0
+
+  // Use the custom hook for loading OLAP reports
+  const { loadOlapReport } = useLoadOlapReport()
+
+  const columns = useMemo<ColumnDef<DBTableVersionApiType>[]>(
+    () => [
+      {
+        id: 'radio',
+        header: () => '',
+        cell: ({ row }) => {
+          return (
+            <Radio
+              checked={rowSelection[row.original.id] === true}
+              onChange={() => {
+                const id = row.original.id
+                setRowSelection({ [id]: true })
+              }}
+            />
+          )
         },
-        {
-          accessorKey: 'version_name',
-          header: 'Наименование',
-          cell: ({ row }) => (
-            <Typography>{row.original.version_name}</Typography>
-          ),
-        },
-        {
-          accessorKey: 'modifier',
-          header: 'Кем изменено',
-          cell: ({ row }) => <Typography>{row.original.modifier}</Typography>,
-        },
+      },
+      {
+        accessorKey: 'version_name',
+        header: 'Наименование',
+        cell: ({ row }) => (
+          <Typography>{row.original.version_name}</Typography>
+        ),
+      },
+      {
+        accessorKey: 'modifier',
+        header: 'Кем изменено',
+        cell: ({ row }) => <Typography>{row.original.modifier}</Typography>,
+      },
+      {
+        accessorKey: 'timemark',
+        header: 'Дата изменения',
+        cell: ({ row }) => (
+          <Typography>{formatDate(row.original.timemark)}</Typography>
+        ),
+      },
+      {
+        accessorKey: 'additionalInfo',
+        header: '',
+        cell: ({ row }) => (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="table-button">
+                <InfoCircleOutlined />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="reports-table-tooltip">
+              <Typography className="reports-table-tooltip__text">
+                Автор:
+                {' '}
+                {row.original.creator}
+              </Typography>
+              <Typography className="reports-table-tooltip__text">
+                Дата создания:
+                {' '}
+                {formatDate(row.original.timemark)}
+              </Typography>
+            </TooltipContent>
+          </Tooltip>
+        ),
+      },
+    ],
+    [rowSelection],
+  )
 
-        {
-          accessorKey: 'timemark',
-          header: 'Дата изменения',
-          cell: ({ row }) => (
-            <Typography>{formatDate(row.original.timemark)}</Typography>
-          ),
-        },
+  const table = useReactTable({
+    data: tableData ?? [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: { rowSelection },
+  })
 
-        {
-          accessorKey: 'additionalInfo',
-          header: '',
-          cell: ({ row }) => (
-            // { row }
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" className="table-button">
-                  <InfoCircleOutlined />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="reports-table-tooltip">
-                <Typography className="reports-table-tooltip__text">
-                  Автор:
-                  {' '}
-                  {row.original.creator}
-                </Typography>
-                <Typography className="reports-table-tooltip__text">
-                  Дата создания:
-                  {' '}
-                  {formatDate(row.original.timemark)}
-                </Typography>
-              </TooltipContent>
-            </Tooltip>
-          ),
-        },
-      ],
-      [rowSelection],
-    )
+  const showModal = () => {
+    setIsModalOpen(true)
+  }
 
-    const table = useReactTable({
-      data: tableData ?? [],
-      columns,
-      getCoreRowModel: getCoreRowModel(),
-      getFilteredRowModel: getFilteredRowModel(),
-      onRowSelectionChange: setRowSelection,
-      state: { rowSelection },
-      // getRowId: (row) => row.id,
-    })
+  const handleOk = () => {
+    setIsModalOpen(false)
+  }
 
-    const showModal = () => {
-      setIsModalOpen(true)
-    }
+  const handleCancel = () => {
+    setIsModalOpen(false)
+  }
 
-    const handleOk = () => {
-      // TODO переписать при создании нового олап отчета
-      // dispatch(setTablePageParametrs({ pivotTableLabel, pivotTablePageId }));
+  const handleGetOlap = async () => {
+    if (selectedVersionId) {
+      try {
+        // Load OLAP report using React Query hook
+        const data = await loadOlapReport(selectedVersionId)
 
-      setIsModalOpen(false)
-    }
-
-    const handleCancel = () => {
-      setIsModalOpen(false)
-    }
-
-    const handleGetOlap = async () => {
-      if (selectedVersionId) {
-        const result = await triggerGetOlap({
-          olapVersionId: selectedVersionId,
-        })
-
-        if (!result?.data) {
-          // console.error('No data received from the API');
-          return
+        if (!data) {
+          console.error('No data received from the API')
         }
-        const pageId = nanoid()
 
-        const {
-          creator,
-          dataset_id: datasetId,
-          id,
-          modifier,
-          table,
-          timemark,
-          version_name: versionName,
-          version_request: versionRequest,
-          filters,
-        } = result.data
-
-        dispatch(
-          setOlapReportPageParametrs({
-            creator,
-            datasetId,
-            id,
-            modifier,
-            table,
-            timemark,
-            versionName,
-            versionRequest,
-            filters,
-            physicalName: '',
-            pageId,
-          }),
-        )
-
-        // const currentPages = store.getState().olapReportsPages.pages; // Актуальное состояние
-        // const pageWasAdded = currentPages.some((page) => page.pageId === pageId);
-
-        console.log(currentPages)
-
-        // if (pageWasAdded) {
-        //   //navigate(`/olapReport/${newPageId}`);
-        //   navigate({
-        //     to: "/olapReport/$pageId",
-        //     params: { pageId: pageId },
-        //     // search: (prev) => ({ ...prev })
-        //   });
-
-        // } else {
-        //   console.error('Page was not added to the store');
-        //   // Можно показать пользователю ошибку
-        // }
+        // Navigate to the new page (loadOlapReport already handles store updates)
+        // No need to dispatch action as the hook already updates the MobX store
+      }
+      catch (error) {
+        console.error('Error loading OLAP report:', error)
       }
     }
+  }
 
-    // TODO Button disabled выбрать
+  if (isLoading) {
+    return <div className="versions-panel-view">Loading versions...</div>
+  }
 
-    return (
-      <div className="versions-panel-view">
-        <div className="versions-panel__table">
-          <Input.Search
-            className="search__field"
-            placeholder="Введите название"
-            onChange={(event) => {
-              const searchValue = event.target.value
-              table.getColumn('version_name')?.setFilterValue(searchValue)
-            }}
-          />
-          {tableData.length === 0
-            ? (
-                <EmptyTableWithHeader table={table} />
-              )
-            : (
-                <DataTable
-                  table={table}
-                  onRowClick={row => setRowSelection({ [row.original.id]: true })}
-                  selectedRow={selectedVersionId}
-                />
-              )}
-        </div>
-
-        <div className="versions-panel__buttons">
-          <Button
-            variant="outline"
-            onClick={showModal}
-            disabled={!iscreateTableButtonActive}
-          >
-            Создать
-          </Button>
-          <Button
-            disabled={
-              // !isRowSelected && tableBuilderPages.length <= maxTablePagesCount
-              !isChooseButtonActive
-            }
-            onClick={handleGetOlap}
-          >
-            Выбрать
-          </Button>
-          {isModalOpen && (
-            <CreateTableModal
-              isModalOpen={isModalOpen}
-              handleOk={() => handleOk()}
-              handleCancel={handleCancel}
-            />
-          )}
-        </div>
+  return (
+    <div className="versions-panel-view">
+      <div className="versions-panel__table">
+        <Input.Search
+          className="search__field"
+          placeholder="Введите название"
+          onChange={(event) => {
+            const searchValue = event.target.value
+            table.getColumn('version_name')?.setFilterValue(searchValue)
+          }}
+        />
+        {tableData.length === 0
+          ? (
+              <EmptyTableWithHeader table={table} />
+            )
+          : (
+              <DataTable
+                table={table}
+                onRowClick={row => setRowSelection({ [row.original.id]: true })}
+                selectedRow={selectedVersionId}
+              />
+            )}
       </div>
-    )
-  },
-)
+
+      <div className="versions-panel__buttons">
+        <Button
+          variant="outline"
+          onClick={showModal}
+          disabled={!isCreateTableButtonActive}
+        >
+          Создать
+        </Button>
+        <Button
+          disabled={!isChooseButtonActive}
+          onClick={handleGetOlap}
+        >
+          Выбрать
+        </Button>
+        {isModalOpen && (
+          <CreateTableModal
+            isModalOpen={isModalOpen}
+            handleOk={() => handleOk()}
+            handleCancel={handleCancel}
+          />
+        )}
+      </div>
+    </div>
+  )
+})

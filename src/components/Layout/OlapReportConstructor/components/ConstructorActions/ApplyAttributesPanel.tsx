@@ -1,46 +1,39 @@
 import type { FC } from 'react'
 
 import { useEffect } from 'react'
+import { observer } from 'mobx-react-lite'
 import { Button, Spin, Switch, Typography } from '@tinkerbells/xenon-ui'
 
-import { useAppDispatch } from '../../../../../store/store'
-import { usePageParams } from '../../../../../hooks/usePageParams'
-import { setIsStartFetching } from '../../../../../store/features/olapReposrtsPagesSlice/olapReposrtsPagesSlice'
+import { useOlapConfigStore, useUIStore } from '../../../../../stores/RootStore'
 
 interface ApplyAttributesPanelProps {
   pageId: string
 }
 
-export const ApplyAttributesPanel: FC<ApplyAttributesPanelProps> = ({
+export const ApplyAttributesPanel: FC<ApplyAttributesPanelProps> = observer(({
   pageId,
 }) => {
-  // const [checked, setChecked] = useState<boolean>(false);
+  const olapConfigStore = useOlapConfigStore()
+  const uiStore = useUIStore()
 
-  const pageParams = usePageParams(pageId)
-  const isFetching = pageParams.constructorParametrs.isButtonFetching
-  const dispatch = useAppDispatch()
-  const pivotTableQueryParams = pageParams.pivotTableUrlParams
+  const isFetching = uiStore.isButtonFetching
+  const pivotTableConfig = olapConfigStore.pivotTableConfig
 
   const isButtonActive
-    = pivotTableQueryParams.rows.length > 0
-      && pivotTableQueryParams.columns.length > 0
-      && pivotTableQueryParams.values.length > 0
-      && pivotTableQueryParams.aggfunc.length > 0
-
-  // const onChange = () => {
-  //   setChecked(!checked);
-  //   dispatch(setPivotTableMergedURLParam(!checked));
-  // };
+    = pivotTableConfig.rows.length > 0
+      && pivotTableConfig.columns.length > 0
+      && pivotTableConfig.values.length > 0
+      && pivotTableConfig.aggfunc.length > 0
 
   useEffect(() => {
     if (!isFetching) {
-      dispatch(setIsStartFetching({ pageId, isStartFetching: false }))
+      uiStore.setStartFetching(false)
     }
-  }, [isFetching, dispatch, pageId])
+  }, [isFetching, uiStore])
 
   const handleClick = () => {
     if (isButtonActive) {
-      dispatch(setIsStartFetching({ pageId, isStartFetching: true }))
+      uiStore.setStartFetching(true)
     }
   }
 
@@ -49,8 +42,6 @@ export const ApplyAttributesPanel: FC<ApplyAttributesPanelProps> = ({
       <div className="table-constructor__actions-item">
         <Switch
           className="actions__switch"
-          // value={checked}
-          // onChange={onChange}
         />
         <Typography>Учитывать общее значение</Typography>
       </div>
@@ -65,4 +56,4 @@ export const ApplyAttributesPanel: FC<ApplyAttributesPanelProps> = ({
       </div>
     </div>
   )
-}
+})

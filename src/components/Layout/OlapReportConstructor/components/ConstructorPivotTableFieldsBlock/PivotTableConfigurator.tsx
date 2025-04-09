@@ -7,6 +7,7 @@ import type {
   UniqueIdentifier,
 } from '@dnd-kit/core'
 
+import { observer } from 'mobx-react-lite'
 import { useEffect, useMemo, useState } from 'react'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
@@ -17,7 +18,6 @@ import {
 import {
   arrayMove,
   SortableContext,
-  // useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import {
@@ -47,18 +47,17 @@ import {
   Typography,
 } from '@tinkerbells/xenon-ui'
 
-import type { ConstructorAttributeType, ConstructorPivotTableConfiguratorType } from '../../../../../types/olapReportPage.ts'
+import type { ConstructorAttributeType, ConstructorPivotTableConfiguratorType } from '../../../../../types/olapReportPage'
 
-import { useAppDispatch } from '../../../../../store/store.ts'
 import './../../table-constructor.scss'
-import { DEFAULT_STATE } from '../../../../../consts/globalConsts.ts'
-import { ArrowButton, CloseButton } from '../../../../../assets/Icons.tsx'
-import { ConstructorAttributeValuesModal } from './ConstructorAttributeValuesModal.tsx'
+import { DEFAULT_STATE } from '../../../../../consts/globalConsts'
+import { useOlapConfigStore } from '../../../../../stores/RootStore'
+import { ArrowButton, CloseButton } from '../../../../../assets/Icons'
+import { ConstructorAttributeValuesModal } from './ConstructorAttributeValuesModal'
 import {
   DraggableRow,
   RowDragHandleCell,
-} from '../TableDndComponants/TableDndComponents.tsx'
-import { deleteAttributeFromTableConfigurator, setConstructorAttributeModalContent, setPivotTableUrlParams, setTableConfiguratorFields } from '../../../../../store/features/olapReposrtsPagesSlice/olapReposrtsPagesSlice.ts'
+} from '../TableDndComponants/TableDndComponents'
 
 interface Props {
   pageId: string
@@ -67,27 +66,18 @@ interface Props {
   attributes?: ConstructorAttributeType[]
   type: string
   selectedAttributes?: string[]
-  handleCheckedChange?: (
-    type: string,
-    selectedSubTableFilters: string[]
-  ) => void
-  handleChangeFiltersOrder?: (
-    type: string,
-    subTableAttributes: string[]
-  ) => void
 }
 
-/// ВСЕ ПЕРЕПИСАТЬ!
-export const PivotTableConfigurator: FC<Props> = ({
+export const PivotTableConfigurator: FC<Props> = observer(({
   pageId,
   type,
   title,
   attributes,
   stats,
-  // selectedAttributes,
-  // handleCheckedChange,
-  // handleChangeFiltersOrder
 }) => {
+  // Use MobX store instead of Redux
+  const olapConfigStore = useOlapConfigStore()
+
   const [configuratorData, setConfiguratorData] = useState<ConstructorAttributeType[]>(DEFAULT_STATE.ARRAY)
 
   const dataIds = useMemo<UniqueIdentifier[]>(
@@ -97,14 +87,13 @@ export const PivotTableConfigurator: FC<Props> = ({
 
   const rowsCount = attributes?.length ?? ''
 
-  const dispatch = useAppDispatch()
-
   useEffect(() => {
     if (attributes) {
       setConfiguratorData(attributes)
-      dispatch(setPivotTableUrlParams({ pageId, type, fields: attributes.map(item => item.attributeName) }))
+      // Call MobX store method instead of dispatching Redux action
+      olapConfigStore.setPivotTableUrlParams(type, attributes.map(item => item.attributeName))
     }
-  }, [attributes, dispatch, pageId, type])
+  }, [attributes, olapConfigStore, type])
 
   const columns = useMemo<ColumnDef<ConstructorAttributeType>[]>(
     () => [
@@ -120,20 +109,12 @@ export const PivotTableConfigurator: FC<Props> = ({
         header: ({ table }) => {
           const isAllRowsSelected = table.getIsAllRowsSelected()
           const isSomeRowsSelected = table.getIsSomeRowsSelected()
-          // const selectedRowModel = table.getSelectedRowModel();
-          // console.log(selectedRowModel);
-
-          // console.log(isSomeRowsSelected, "selectedRows")
-          // console.log("header", type, isAllRowsSelected,)
           const hasSelectedRows = table.getSelectedRowModel().rows.length > 0
           const isIndeterminate = hasSelectedRows ? isSomeRowsSelected : false
           return (
             <Checkbox
               data-no-dnd="true"
-              checked={
-                // table.getIsAllRowsSelected()
-                isAllRowsSelected
-              }
+              checked={isAllRowsSelected}
               indeterminate={isIndeterminate}
               onChange={(value) => {
                 const isChecked = value.target.checked
@@ -143,7 +124,6 @@ export const PivotTableConfigurator: FC<Props> = ({
             />
           )
         },
-
         cell: ({ row }) => {
           return (
             <Checkbox
@@ -185,10 +165,6 @@ export const PivotTableConfigurator: FC<Props> = ({
         cell: ({ row }) => {
           const totalCount = row.original.attributeValues.length
           const selectedAttributeValuesCount = row.original.selectedAttributeValues.length
-          // console.log(type, " ", row.original.selectedAttributeValues);
-          // const selectedCount = row.original.selectedAttributeValues?.length;
-
-          // console.log("selected",row.original.selectedAttributeValues )
           return (
             <span>
               {selectedAttributeValuesCount}
@@ -210,7 +186,6 @@ export const PivotTableConfigurator: FC<Props> = ({
               <Button
                 variant="ghost"
                 id={`closeButton-${attributeName}`}
-                // size="sm"
                 className="sub-item__table-button sub-item__table-close-button"
                 onClick={() => handleDeleteAttribute(attributeName)}
               >
@@ -230,19 +205,14 @@ export const PivotTableConfigurator: FC<Props> = ({
               <Popover
                 placement="right"
                 modal
-                // open={isPopoverOpen}
                 withArrow={false}
-                // onOpenChange={setIsPopoverOpen}
               >
                 <PopoverTrigger asChild>
                   <Button
                     style={{ marginRight: '10px' }}
-                    // size="sm"
                     variant="ghost"
                     className="table-button sub-item__table-button"
-                    onClick={() =>
-                      // handleOpenChange(true);
-                      handleChangePopoverContent(row.original)}
+                    onClick={() => handleChangePopoverContent(row.original)}
                   >
                     <ArrowButton />
                   </Button>
@@ -256,11 +226,8 @@ export const PivotTableConfigurator: FC<Props> = ({
         },
       },
     ],
-
-    [],
+    [stats],
   )
-
-  // console.log(initialState);
 
   const table = useReactTable({
     data: configuratorData,
@@ -270,11 +237,6 @@ export const PivotTableConfigurator: FC<Props> = ({
   })
 
   const subTableAllRows = table.getRowModel().rows
-
-  // const subTableAttributes = useMemo(
-  //   () => subTableAllRows.map((item) => item.original.attributeName),
-  //   [subTableAllRows]
-  // );
 
   useEffect(() => {
     subTableAllRows.forEach((row) => {
@@ -294,56 +256,36 @@ export const PivotTableConfigurator: FC<Props> = ({
       const oldIndex = dataIds.indexOf(active.id)
       const newIndex = dataIds.indexOf(over.id)
 
-      // Сначала обновляем локальное состояние
+      // Update local state
       setConfiguratorData((prevData) => {
         const newData = arrayMove(prevData, oldIndex, newIndex)
 
-        // Затем диспатчим обновление в Redux
-        dispatch(setTableConfiguratorFields({
-          pageId,
-          type,
-          updatedAttributes: newData,
-        }))
+        // Update MobX store instead of dispatching Redux actions
+        olapConfigStore.setTableConfiguratorFields(type, newData)
+        olapConfigStore.setPivotTableUrlParams(type, newData.map(item => item.attributeName))
 
-        dispatch(setPivotTableUrlParams({ pageId, type, fields: newData.map(item => item.attributeName) }))
         return newData
       })
     }
   }
 
   const handleDeleteAttribute = (attribute: string) => {
-    dispatch(deleteAttributeFromTableConfigurator({ pageId, attribute }))
+    // Call MobX store method instead of dispatching Redux action
+    olapConfigStore.deleteAttributeFromTableConfigurator(attribute)
   }
 
   const handleChangePopoverContent = (
     rowData: ConstructorPivotTableConfiguratorType,
   ) => {
-    // console.log(rowData);
     const { attributeValues, selectedAttributeValues, attributePlaceholder, attributeName } = rowData
-    dispatch(
-      setConstructorAttributeModalContent({
-        pageId,
-        parametrs: attributeValues,
-        selectedParametrs: selectedAttributeValues,
-        attributePlaceholder,
-        attributeName,
-      }),
-    )
-    // dispatch(
-    //   setSubTableModalContent({
-    //     title: rowData.attribute,
-    //     //parametrs: rowData.attributeParametrs,
-    //   })
-    // );
 
-    // setConstructorAttributeModalContent: (
-    //   state,
-    //   action: PayloadAction<{
-    //     pageId: string;
-    //     parametrs: unknown[];
-    //     selectedParametrs: unknown[];
-    //     title: string;
-    //   }>
+    // Call MobX store method instead of dispatching Redux action
+    olapConfigStore.setConstructorAttributeModalContent(
+      attributeValues,
+      selectedAttributeValues,
+      attributePlaceholder,
+      attributeName,
+    )
   }
 
   const sensors = useSensors(
@@ -413,47 +355,4 @@ export const PivotTableConfigurator: FC<Props> = ({
       </ScrollArea>
     </div>
   )
-}
-
-// const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
-// <Popover
-// placement="right"
-// modal
-// open={isPopoverOpen}
-// withArrow={false}
-// onOpenChange={setIsPopoverOpen}
-// >
-// <PopoverTrigger
-// //asChild
-// >
-//   <IconButton
-//     size="lg"
-//     variant="ghost"
-//     className="sub-item__table-button"
-//     onClick={() =>
-//       //handleOpenChange(true);
-//       handleChangePopoverContent(row.original)
-//     }
-//   >
-//     <ArrowButton />
-//   </IconButton>
-// </PopoverTrigger>
-// <PopoverContent>
-//   <SubTableModal
-//     onPopoverClose={() => handleOpenChange(false)}
-//   />
-// </PopoverContent>
-// </Popover>
-// </>
-
-// const handleChangePopoverContent = (rowData: TableConstructorItemType) => {
-//   setIsPopoverOpen((prev) => !prev);
-//   dispatch(setSubTableModalOpen(true));
-//   dispatch(
-//     setSubTableModalContent({
-//       title: rowData.attribute,
-//       parametrs: rowData.attributeData,
-//     })
-//   );
-// };
+})

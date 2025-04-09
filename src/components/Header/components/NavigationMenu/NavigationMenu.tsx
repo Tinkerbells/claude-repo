@@ -1,20 +1,21 @@
+// src/components/Header/components/NavigationMenu/NavigationMenu.tsx
 import type { MenuProps } from '@tinkerbells/xenon-ui'
 
 import { cn } from '@bem-react/classname'
+import { observer } from 'mobx-react-lite'
 import { memo, useMemo, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { IconButton, Menu, Typography } from '@tinkerbells/xenon-ui'
 
 import './navigation-menu.scss'
 import { MenuModal } from '../MenuModal'
-import { useAppSelector } from '../../../../store/store'
+import { useRootStore } from '../../../../stores/RootStore'
 import {
   CloseButton,
   HomeOutlined,
   LogoPlaceholder,
   TableOutlined,
 } from '../../../../assets/Icons'
-// import { useAppSelector } from "../../../../store/store";
 
 const b = cn('navigation-menu')
 
@@ -25,19 +26,22 @@ function NavigationMenuComponent(props: MenuProps) {
   const [current, setCurrent] = useState('main')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const navigate = useNavigate()
-  const olapReposrtsPages = useAppSelector(
-    state => state.olapReportsPages.pages,
-  )
 
-  const memoizedOlapReportsPages = useMemo(
-    () => olapReposrtsPages,
-    [olapReposrtsPages],
+  // Use MobX root store to access pages
+  const rootStore = useRootStore()
+
+  // Get open OLAP report pages from the store
+  // This assumes we've added a pageManager to our RootStore
+  const olapReportPages = rootStore.pageManager.openPages
+
+  const memoizedOlapReportPages = useMemo(
+    () => olapReportPages,
+    [olapReportPages],
   )
 
   const onClick: MenuProps['onClick'] = (e) => {
     if (e.key !== 'logo') {
       setCurrent(e.key)
-      // console.log(e);
     }
 
     if (e.key === 'main') {
@@ -48,15 +52,9 @@ function NavigationMenuComponent(props: MenuProps) {
       navigate({
         to: '/olapReport/$pageId',
         params: { pageId: keyId },
-        // search: (prev) => ({ ...prev })
       })
     }
   }
-
-  // const handleDeleteOlapPage = (pageId) => {
-  //   console.log(pageId);
-
-  // }
 
   const showModal = () => {
     setIsModalOpen(true)
@@ -70,7 +68,7 @@ function NavigationMenuComponent(props: MenuProps) {
     setIsModalOpen(false)
   }
 
-  // Мемоизация items, чтобы избежать пересоздания при каждом рендере
+  // Memoized items to avoid recreation on each render
   const items = useMemo<MenuItem[]>(() => {
     return [
       {
@@ -82,7 +80,7 @@ function NavigationMenuComponent(props: MenuProps) {
         icon: <HomeOutlined />,
         key: 'main',
       },
-      ...memoizedOlapReportsPages.map(item => ({
+      ...memoizedOlapReportPages.map(item => ({
         label: (
           <div className="navigation-menu__item">
             <Typography>{item.versionName}</Typography>
@@ -90,10 +88,7 @@ function NavigationMenuComponent(props: MenuProps) {
               variant="link"
               size="sm"
               className="navigation-menu__item--close-button"
-              onClick={
-                showModal
-                // () => handleDeleteOlapPage(item.pageId)
-              }
+              onClick={showModal}
             >
               <CloseButton />
             </IconButton>
@@ -103,9 +98,7 @@ function NavigationMenuComponent(props: MenuProps) {
         key: item.pageId,
       })),
     ]
-  }, [memoizedOlapReportsPages])
-
-  // console.log(items);
+  }, [memoizedOlapReportPages])
 
   return (
     <>
@@ -123,11 +116,11 @@ function NavigationMenuComponent(props: MenuProps) {
           handleOk={handleOk}
           handleCancel={handleCancel}
           pageId={current}
-          // pageId={page}
         />
       )}
     </>
   )
 }
 
-export const NavigationMenu = memo(NavigationMenuComponent)
+// Add observer here to make the component react to MobX state changes
+export const NavigationMenu = memo(observer(NavigationMenuComponent))
