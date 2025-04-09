@@ -1,0 +1,127 @@
+/////есть два компонента. Выбор таблиц  и выбор версии
+.table-management-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.table-panel {
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  background-color: var(--xenon-color-bg-container);
+  border-radius: var(--Border-Radius-borderRadiusLG, 4px);
+
+  &__header {
+    display: flex;
+    height: 56px;
+    padding: var(--Space-Padding-padding, 16px) var(--Space-Margin-margin, 16px)
+      var(--Space-Padding-padding, 16px) var(--Space-Padding-padding, 16px);
+    border-bottom: 1px solid var(--xenon-color-split);
+  }
+
+  &__content {
+    // padding: var(--Space-Padding-padding, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .table-list-view {
+    padding: var(--Space-Padding-padding, 16px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .versions-panel-view {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    // gap:8px;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .versions-panel {
+    &__table {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: var(--Space-Padding-padding, 16px);
+      width: 100%;
+      //flex-grow: 1;
+
+      // &--tooltip {
+      //   z-index: 100000 !important;
+      // }
+    }
+    &__buttons {
+      padding: var(--Space-Padding-padding, 16px);
+      border-top: 1px solid var(--xenon-color-border-secondary);
+      width: 100%;
+      display: flex;
+      gap: 12px;
+
+      //элементы на всю ширину
+      > * {
+        flex-grow: 1;
+        flex-basis: 0;
+      }
+    }
+  }
+
+  &--picker {
+    flex-grow: 1;
+    // height: 100%;
+  }
+
+  &--versions {
+    width: 694px;
+  }
+
+  .table-item {
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  table th {
+    border: none !important;
+  }
+}
+
+.create-table-modal {
+  &__content {
+    width: 100%;
+    padding-top: 12px;
+    padding-bottom: 24px;
+  }
+
+  &__button {
+    margin-right: 8px;
+  }
+}
+
+.reports-table-tooltip {
+  z-index: 10;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    color: var(--xenon-color-text) in !important;
+  }
+}

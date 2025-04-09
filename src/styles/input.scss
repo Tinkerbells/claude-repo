@@ -1,0 +1,58 @@
+@use "./colors.scss" as colors;
+
+.check {
+  display: flex;
+  align-items: center;
+
+  &-input {
+    border: 0;
+    border-radius: 3px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    background-color: colors.$white;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8' width='10' height='8' fill='none'%3e%3cpath d='M3.947 8L0 3.891L1.598 2.212L3.944 4.66L8.401 0L10 1.672L3.947 8Z' fill='%23ffffff'/%3e%3c/svg%3e");
+
+    &:active {
+      filter: brightness(90%);
+    }
+
+    &:focus {
+      border-color: colors.$blue-hard;
+      outline: 0;
+      box-shadow: none;
+    }
+
+    &:not(:checked) {
+      border: 1px solid colors.$blue-hard;
+      background-color: colors.$white;
+    }
+
+    &:checked {
+      background-color: colors.$blue-hard;
+      border-color: colors.$blue-hard;
+    }
+  }
+
+  &-label {
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 400;
+    margin-left: 8px;
+    width: 100%;
+    color: colors.$grey-font-table;
+  }
+
+  &-separator {
+    display: block;
+    height: 0;
+    opacity: 0.5;
+    border-bottom: 2px solid colors.$blue-hard;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+}
+

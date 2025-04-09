@@ -1,0 +1,28 @@
+.menu-header {
+  padding-right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--xenon-color-bg-container);
+}
+
+.xenon-modal .xenon-modal-content {
+  padding: 16px !important;
+  width: 520px;
+}
+
+.xenon-modal-title {
+  font-weight: 600 !important;
+}
+
+.create-table-modal {
+  &__content {
+    width: 100%;
+    padding-top: 12px;
+    padding-bottom: 24px;
+  }
+
+  &__button {
+    margin-right: 8px;
+  }
+}

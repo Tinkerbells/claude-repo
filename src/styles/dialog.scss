@@ -1,0 +1,112 @@
+@use "./colors.scss" as colors;
+
+.modal {
+  &-dialog {
+    transition: transform 0.3s ease-out;
+
+    &-overlay {
+      background: rgba(0, 0, 0, 0.5);
+      display: grid;
+      place-items: center;
+      z-index: (1000 + 5); // см. filter-btn page01.scss
+    }
+  }
+
+  &-content {
+    padding-bottom: 20px;
+    border-radius: 20px;
+    box-shadow: 0 0 15px 0 rgba(0, 121, 193, 0.3);
+
+    background-color: colors.$white;
+    background-clip: padding-box;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    outline: 0;
+  }
+
+  &__header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    padding: 20px;
+
+    &-status {
+      display: flex;
+      margin: auto;
+      gap: 10px;
+    }
+
+    &-title {
+      color: colors.$blue;
+      font-size: 26px;
+      font-weight: 700;
+      text-align: center;
+      margin: 0 40px 0 40px;
+      width: 100%;
+    }
+
+    &-close {
+      cursor: pointer;
+      margin: auto;
+      &:hover {
+        transition: 0.5s;
+        transform: scale(1.2);
+      }
+    }
+  }
+
+  &__body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 0 20px 0 20px;
+
+    .xenon-typography {
+      &_level-body {
+        font-size: 16px;
+      }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 20px;
+
+    &-action {
+      &-reset {
+        border-radius: 5px;
+        background: colors.$white;
+        border: 1px solid colors.$blue-hard;
+        color: colors.$blue-hard;
+        cursor: pointer;
+        transition: box-shadow 0.3s linear;
+        &:hover {
+          transition: box-shadow 0.3s linear;
+          box-shadow: 0 0 8px 1px rgba(colors.$blue-hard, 0.5);
+        }
+      }
+
+      &-apply {
+        font-size: 14px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        background: colors.$blue-hard;
+        border: none;
+        color: colors.$white;
+        cursor: pointer;
+        transition: box-shadow 0.3s linear;
+        &:hover {
+          transition: box-shadow 0.3s linear;
+          box-shadow: 0 0 8px 1px rgba(colors.$blue, 0.5);
+        }
+      }
+    }
+  }
+}

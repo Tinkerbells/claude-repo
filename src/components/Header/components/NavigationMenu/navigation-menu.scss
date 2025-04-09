@@ -1,0 +1,80 @@
+.navigation-menu {
+  width: 100%;
+  //max-width: max-content;
+  li:nth-child(1) {
+    pointer-events: none;
+    color: var(--xenon-brand-primary-colorprimary) !important;
+  }
+  li {
+    height: 56px;
+    display: flex !important;
+    padding: var(--Space-Padding-paddingSM, 12px) 0px
+      var(--Space-Padding-paddingContentVertical, 12px) 0px;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: var(--Components-Menu-Component-iconMarginInlineEnd, 10px);
+    flex: 1 0 0 0;
+  }
+  &_mode_vertical {
+    li:nth-child(1) {
+      margin: 16px 12px;
+    }
+  }
+
+  &__item {
+    display: flex !important;
+    align-items: center;
+    gap: var(--Components-Menu-Component-iconMarginInlineEnd, 10px);
+  }
+
+  .navigation-menu__item--close-button {
+
+    opacity: 1;
+    transition: opacity 0.2s ease;
+  }
+  
+
+}
+
+.xenon-menu-overflow {
+  border: none;
+}
+
+.xenon-menu-item {
+  display: flex;
+  padding: var(--Space-Padding-paddingSM, 12px) 0px
+    var(--Space-Padding-paddingContentVertical, 12px) 0px;
+  justify-content: center;
+  align-items: center;
+  gap: var(--Components-Menu-Component-iconMarginInlineEnd, 10px);
+  flex: 1 0 0;
+}
+
+
+.xenon-menu-item-selected, 
+.xenon-menu-item-selected *,
+.xenon-menu-item-selected svg,
+.xenon-menu-item-selected svg * {
+  color: inherit !important;
+  fill: currentColor !important;
+  fill-opacity:1;
+}
+
+.xenon-menu-item-selected {
+  color: var(--xenon-menu-horizontal-item-selected-color) !important;
+}
+
+
+.create-table-modal {
+  &__content {
+    width:100%;
+    padding-top: 12px;
+    padding-bottom: 24px;
+  }
+  
+  &__button {
+    margin-right: 8px;
+
+
+  }
+}
