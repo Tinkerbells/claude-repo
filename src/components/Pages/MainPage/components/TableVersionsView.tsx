@@ -1,4 +1,3 @@
-// src/components/Pages/MainPage/components/TableVersionsView.tsx
 import type { FC } from 'react'
 import type {
   ColumnDef,
@@ -28,9 +27,9 @@ import { formatDate } from '../utils/utils'
 import { CreateTableModal } from './CreateTableModal'
 import { DataTable } from '../../../UI/DataTable/DataTable'
 import { InfoCircleOutlined } from '../../../../assets/Icons'
+import { usePageManager } from '../../../../stores/RootStore'
 import { useLoadOlapReport } from '../../../../api/useOlapQueries'
 import { EmptyTableWithHeader } from '../../../UI/DataTable/EmptyTableWithHeader'
-import { useOlapConfigStore, usePageManager } from '../../../../stores/RootStore'
 
 interface TableVersionsProps {
   tableData: DBTableVersionApiType[]

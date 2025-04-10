@@ -66,7 +66,3 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-
-.xenon-tooltip__content {
-  z-index: 9999;
-}

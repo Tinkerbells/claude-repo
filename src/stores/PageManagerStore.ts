@@ -42,17 +42,3 @@ export class PageManagerStore {
     return this.openPages.find(page => page.pageId === pageId)
   }
 }
-
-// Update RootStore.ts to include PageManagerStore
-// Add this to RootStore class:
-/*
-  pageManager: PageManagerStore;
-
-  constructor() {
-    this.datasetStore = new DatasetStore(this);
-    this.olapConfigStore = new OlapConfigStore(this);
-    this.uiStore = new UIStore(this);
-    this.pageManager = new PageManagerStore(this);
-    makeAutoObservable(this);
-  }
-*/
