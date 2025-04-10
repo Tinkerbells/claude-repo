@@ -1,4 +1,3 @@
-// src/components/Header/components/NavigationMenu/NavigationMenu.tsx
 import type { MenuProps } from '@tinkerbells/xenon-ui'
 
 import { cn } from '@bem-react/classname'
@@ -8,13 +7,12 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { IconButton, Menu, Typography } from '@tinkerbells/xenon-ui'
 
 import './navigation-menu.scss'
+
+
 import { MenuModal } from '../MenuModal'
-import { useRootStore } from '../../../../stores/RootStore'
 import {
-  CloseButton,
   HomeOutlined,
   LogoPlaceholder,
-  TableOutlined,
 } from '../../../../assets/Icons'
 
 const b = cn('navigation-menu')
@@ -27,17 +25,10 @@ function NavigationMenuComponent(props: MenuProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const navigate = useNavigate()
 
-  // Use MobX root store to access pages
-  const rootStore = useRootStore()
 
   // Get open OLAP report pages from the store
   // This assumes we've added a pageManager to our RootStore
-  const olapReportPages = rootStore.pageManager.openPages
 
-  const memoizedOlapReportPages = useMemo(
-    () => olapReportPages,
-    [olapReportPages],
-  )
 
   const onClick: MenuProps['onClick'] = (e) => {
     if (e.key !== 'logo') {
@@ -80,25 +71,8 @@ function NavigationMenuComponent(props: MenuProps) {
         icon: <HomeOutlined />,
         key: 'main',
       },
-      ...memoizedOlapReportPages.map(item => ({
-        label: (
-          <div className="navigation-menu__item">
-            <Typography>{item.versionName}</Typography>
-            <IconButton
-              variant="link"
-              size="sm"
-              className="navigation-menu__item--close-button"
-              onClick={showModal}
-            >
-              <CloseButton />
-            </IconButton>
-          </div>
-        ),
-        icon: <TableOutlined />,
-        key: item.pageId,
-      })),
     ]
-  }, [memoizedOlapReportPages])
+  }, [])
 
   return (
     <>

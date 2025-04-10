@@ -28,9 +28,10 @@ import {
   Typography,
 } from '@tinkerbells/xenon-ui'
 
-import { CloseButton } from '../../../../../assets/Icons'
+import { Constructor } from '@/controllers/ConstructorStore'
+
 import '../../table-constructor.scss'
-import { useOlapConfigStore } from '../../../../../stores/RootStore'
+import { CloseButton } from '../../../../../assets/Icons'
 import { aggregationFunctionsHandbook, ATTRIBUTES_TYPES, isAggregationFunctionKey } from '../../../../../consts/pivotTableConsts'
 
 interface ConstructorAttributeValuesModalProps {
@@ -40,10 +41,9 @@ interface ConstructorAttributeValuesModalProps {
 
 export const ConstructorAttributeValuesModal: FC<ConstructorAttributeValuesModalProps> = observer(({ type }) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [store] = useState(Constructor)
 
-  const olapConfigStore = useOlapConfigStore()
-
-  const attributeModal = olapConfigStore.attributeModal
+  const attributeModal = store.attributeModal
 
   const parametrsCount = attributeModal ? `(${attributeModal.parametrs.length})` : '(0)'
 
@@ -135,11 +135,11 @@ export const ConstructorAttributeValuesModal: FC<ConstructorAttributeValuesModal
 
     if (type === ATTRIBUTES_TYPES.VALUES) {
       // Set aggregation functions for pivot table
-      olapConfigStore.setAggregationFunctionsForPivotTable(selectedAttributeValues)
+      store.setAggregationFunctionsForPivotTable(selectedAttributeValues)
     }
 
     // Set selected values for attribute
-    olapConfigStore.setAttributeSelectedValues(
+    store.setAttributeSelectedValues(
       attributeModal.attributeName,
       selectedAttributeValues,
     )

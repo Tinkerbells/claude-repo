@@ -62,6 +62,9 @@ importers:
       mobx-react-lite:
         specifier: ^4.1.0
         version: 4.1.0(mobx@6.13.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      mobx-tanstack-query:
+        specifier: ^4.4.1
+        version: 4.4.1(@tanstack/query-core@5.72.1)(mobx@6.13.7)
       nanoid:
         specifier: ^5.1.5
         version: 5.1.5
@@ -5290,6 +5293,9 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
+  linked-abort-controller@1.1.0:
+    resolution: {integrity: sha512-qFzIKH2oS+GmCg6rWWfXPNoynWUPC1CRr4NNvbqp40l4HwMTT0OBj4PRQxiOA+OAeAcGW1Xq1MRv7SOdu+MlGw==}
+
   loader-runner@4.3.0:
     resolution: {integrity: sha512-3R/1M+yS3j5ou80Me59j7F9IMs4PXs3VqRrm0TU3AbKPxlmpoY1TNscJV/oGJXo8qCatFGTfDbY6W6ipGOYXfg==}
     engines: {node: '>=6.11.5'}
@@ -5599,6 +5605,12 @@ packages:
         optional: true
       react-native:
         optional: true
+
+  mobx-tanstack-query@4.4.1:
+    resolution: {integrity: sha512-U8mJu+KNiUsQg/T3XKwXoUmPSEuIwySoxJt7QK+nHFHsBEFI6pm2sKwE9AjYliT8kyxCfZSu2EOuFQVv0Wmkog==}
+    peerDependencies:
+      '@tanstack/query-core': ^5.67.2
+      mobx: ^6.12.4
 
   mobx@6.13.7:
     resolution: {integrity: sha512-aChaVU/DO5aRPmk1GX8L+whocagUUpBQqoPtJk+cm7UOXUk87J4PeWCh6nNmTTIfEhiR9DI/+FnA8dln/hTK7g==}
@@ -14146,6 +14158,8 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
+  linked-abort-controller@1.1.0: {}
+
   loader-runner@4.3.0: {}
 
   loader-utils@2.0.4:
@@ -14601,6 +14615,12 @@ snapshots:
       use-sync-external-store: 1.4.0(react@18.3.1)
     optionalDependencies:
       react-dom: 18.3.1(react@18.3.1)
+
+  mobx-tanstack-query@4.4.1(@tanstack/query-core@5.72.1)(mobx@6.13.7):
+    dependencies:
+      '@tanstack/query-core': 5.72.1
+      linked-abort-controller: 1.1.0
+      mobx: 6.13.7
 
   mobx@6.13.7: {}
 

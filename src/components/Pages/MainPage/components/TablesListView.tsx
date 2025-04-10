@@ -7,13 +7,15 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 
+import { Dataset } from '@/controllers/DatasetStore'
+
+import '../main-page.scss'
+
 import type { DBTableDatasetAPiType } from '../../../../types/api'
 
 import { formatDate } from '../utils/utils'
-import '../main-page.scss'
 import { ArrowButton } from '../../../../assets/Icons'
 import { DataTable } from '../../../UI/DataTable/DataTable'
-import { useDatasetStore } from '../../../../stores/RootStore'
 import { EmptyTableWithHeader } from '../../../UI/DataTable/EmptyTableWithHeader'
 
 interface TablePickerProps {
@@ -22,8 +24,8 @@ interface TablePickerProps {
 }
 
 export const TablesListView = observer(({ tableData, isLoading }: TablePickerProps) => {
-  const [columnFilters, setColumnFilters] = useState([])
-  const datasetStore = useDatasetStore()
+  const [columnFilters] = useState([])
+  const [datasetStore] = useState(Dataset)
   const selectedDatasetId = datasetStore.dbTableDataset.id
   // Handle table selection
   const handleSetSelectedDbData = (id: number, physicalName: string) => {

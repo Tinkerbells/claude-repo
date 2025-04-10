@@ -4,8 +4,6 @@ import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
 import { Button, Modal, Typography } from '@tinkerbells/xenon-ui'
 
-import { useRootStore } from '../../../stores/RootStore'
-
 interface MenuModalProps {
   isModalOpen: boolean
   handleOk: () => void
@@ -14,12 +12,10 @@ interface MenuModalProps {
 }
 
 export const MenuModal: FC<MenuModalProps> = observer((props) => {
-  const { isModalOpen, handleOk, handleCancel, pageId } = props
-  const rootStore = useRootStore()
+  const { isModalOpen, handleOk, handleCancel } = props
   const navigate = useNavigate()
 
   const handleDeleteOlap = () => {
-    rootStore.pageManager.removePage(pageId)
     navigate({ to: '/' })
   }
 

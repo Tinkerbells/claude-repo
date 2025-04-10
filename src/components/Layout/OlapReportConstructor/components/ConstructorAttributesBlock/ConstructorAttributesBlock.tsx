@@ -38,18 +38,14 @@ import {
   Typography,
 } from '@tinkerbells/xenon-ui'
 
-import { useOlapConfigStore } from '../../../../../stores/RootStore'
+import { Constructor } from '@/controllers/ConstructorStore'
+
 import { subTableSelectOptions } from '../../../../../consts/pivotTableConsts'
 import { DraggableRow, RowDragHandleCell } from '../TableDndComponants/TableDndComponents'
 
-interface Props {
-  pageId: string
-}
-
-export const ConstructorAttributesBlock = observer(({ pageId }: Props) => {
-  const [columnFilters, setColumnFilters] = useState([])
-  const olapConfigStore = useOlapConfigStore()
-  const constructorAllAttributes = olapConfigStore.allAttributes
+export const ConstructorAttributesBlock = observer(() => {
+  const [store] = useState(Constructor)
+  const constructorAllAttributes = store.allAttributes
 
   const dataIds = useMemo(
     () => constructorAllAttributes.map(({ attributeId }) => attributeId),
@@ -66,9 +62,9 @@ export const ConstructorAttributesBlock = observer(({ pageId }: Props) => {
 
   const handleTypeChange = useCallback(
     (attribute: string, type: string) => {
-      olapConfigStore.updateAttributeType(attribute, type)
+      store.updateAttributeType(attribute, type)
     },
-    [olapConfigStore],
+    [store],
   )
 
   const columns = useMemo(
@@ -139,9 +135,7 @@ export const ConstructorAttributesBlock = observer(({ pageId }: Props) => {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: row => row.attributeId,
-    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
-    state: { columnFilters },
   })
 
   const handleDragEnd = (event) => {
@@ -150,7 +144,7 @@ export const ConstructorAttributesBlock = observer(({ pageId }: Props) => {
       const oldIndex = dataIds.indexOf(active.id)
       const newIndex = dataIds.indexOf(over.id)
       const newData = arrayMove(constructorAllAttributes, oldIndex, newIndex)
-      olapConfigStore.setConstructorAllAttributesParametrs(newData)
+      store.setTableConfiguratorFields('attribute', newData)
     }
   }
 

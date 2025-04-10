@@ -26,7 +26,6 @@ export function createAtrributeFilters(
   filters: OlapReportFiltersType[],
   fieldsForPivotTable: any = {},
 ) {
-  // Parse fields with error handling
   const rows = fieldsForPivotTable.rows ? safeJsonParse(fieldsForPivotTable.rows) : DEFAULT_STATE.ARRAY
   const columns = fieldsForPivotTable.columns ? safeJsonParse(fieldsForPivotTable.columns) : DEFAULT_STATE.ARRAY
   const values = fieldsForPivotTable.values ? safeJsonParse(fieldsForPivotTable.values) : DEFAULT_STATE.ARRAY
@@ -73,7 +72,7 @@ export function updateTableConfigurator(allAttributes: ConstructorAttributeType[
 }
 
 export function getSortedAllAttributes(allAttributes: ConstructorAttributeType[]) {
-  return [...allAttributes].sort((a, b) => {
+  return allAttributes.sort((a, b) => {
     if (a.type === ATTRIBUTES_TYPES.NOT_ASSIGNED && b.type !== ATTRIBUTES_TYPES.NOT_ASSIGNED)
       return 1
     if (a.type !== ATTRIBUTES_TYPES.NOT_ASSIGNED && b.type === ATTRIBUTES_TYPES.NOT_ASSIGNED)

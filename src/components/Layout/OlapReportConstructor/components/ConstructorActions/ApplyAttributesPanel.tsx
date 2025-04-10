@@ -1,10 +1,10 @@
 import type { FC } from 'react'
 
-import { useEffect } from 'react'
+import { useState } from 'react'
 import { observer } from 'mobx-react-lite'
-import { Button, Spin, Switch, Typography } from '@tinkerbells/xenon-ui'
+import { Button, Switch, Typography } from '@tinkerbells/xenon-ui'
 
-import { useOlapConfigStore, useUIStore } from '../../../../../stores/RootStore'
+import { Constructor } from '@/controllers/ConstructorStore'
 
 interface ApplyAttributesPanelProps {
   pageId: string
@@ -13,11 +13,9 @@ interface ApplyAttributesPanelProps {
 export const ApplyAttributesPanel: FC<ApplyAttributesPanelProps> = observer(({
   pageId,
 }) => {
-  const olapConfigStore = useOlapConfigStore()
-  const uiStore = useUIStore()
+  const [store] = useState(Constructor)
 
-  const isFetching = uiStore.isButtonFetching
-  const pivotTableConfig = olapConfigStore.pivotTableConfig
+  const pivotTableConfig = store.pivotTableConfig
 
   const isButtonActive
     = pivotTableConfig.rows.length > 0
@@ -25,15 +23,9 @@ export const ApplyAttributesPanel: FC<ApplyAttributesPanelProps> = observer(({
       && pivotTableConfig.values.length > 0
       && pivotTableConfig.aggfunc.length > 0
 
-  useEffect(() => {
-    if (!isFetching) {
-      uiStore.setStartFetching(false)
-    }
-  }, [isFetching, uiStore])
-
   const handleClick = () => {
     if (isButtonActive) {
-      uiStore.setStartFetching(true)
+      // uiStore.setStartFetching(true)
     }
   }
 
@@ -51,7 +43,7 @@ export const ApplyAttributesPanel: FC<ApplyAttributesPanelProps> = observer(({
           className="actions__button"
           onClick={handleClick}
         >
-          {isFetching ? <Spin className="button__spinner" /> : 'Применить'}
+          {/* {isFetching ? <Spin className="button__spinner" /> : 'Применить'} */}
         </Button>
       </div>
     </div>

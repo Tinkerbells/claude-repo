@@ -1,11 +1,14 @@
 import { nanoid } from 'nanoid'
 import { makeAutoObservable } from 'mobx'
+import { MobxQuery } from 'mobx-tanstack-query'
 
 import type { PivotTableType } from '@/types/pivotTable'
 
-import type { RootStore } from './RootStore'
-import type { OlapReportFiltersType } from '../types/api'
+import { queryClient } from '@/main'
+import { ConstructorService } from '@/services/Constructor.service'
+
 import type { ConstructorAttributeType } from '../types/olapReportPage'
+import type { OlapReportApiType, OlapReportFiltersType } from '../types/api'
 
 import { DEFAULT_STATE } from '../consts/globalConsts'
 import { ATTRIBUTES_TYPES } from '../consts/pivotTableConsts'
@@ -15,72 +18,79 @@ import {
   updateTableConfigurator,
 } from '../utils/olapStoreUtils'
 
-export class OlapConfigStore {
-  rootStore: RootStore
+interface AttributeModalType {
+  attributeName: string
+  attributePlaceholder: string
+  parametrs: string[]
+  selectedParametrs: string[]
+}
 
-  // Core data for the OLAP configuration
+interface PivotTableConfigType {
+  rows: string[]
+  columns: string[]
+  values: string[]
+  aggfunc: string[]
+  physical_name: string
+}
+
+interface FiltersByType {
+  rows: ConstructorAttributeType[]
+  columns: ConstructorAttributeType[]
+  values: ConstructorAttributeType[]
+}
+
+class ConstructorStore {
+  private constructorService: ConstructorService = new ConstructorService()
   allAttributes: ConstructorAttributeType[] = []
-
-  // Modal content for attribute selection
-  attributeModal: {
-    attributeName: string
-    attributePlaceholder: string
-    parametrs: string[]
-    selectedParametrs: string[]
-  } | null = null
-
-  // Current pivot table configuration
-  pivotTableConfig = {
-    rows: [] as string[],
-    columns: [] as string[],
-    values: [] as string[],
-    aggfunc: [] as string[],
+  attributeModal: AttributeModalType | null = null
+  pivotTableConfig: PivotTableConfigType = {
+    rows: [],
+    columns: [],
+    values: [],
+    aggfunc: [],
     physical_name: '',
   }
 
-  // Current pivot table data
   pivotTableData: PivotTableType | null = null
 
-  // Current page ID (for managing multiple OLAP reports)
-  currentPageId: string = ''
+  currentPageId: string = '2'
 
-  constructor(rootStore: RootStore) {
-    this.rootStore = rootStore
+  olapQuery: MobxQuery<OlapReportApiType, Error> = new MobxQuery({
+    queryClient,
+    queryKey: ['olap'],
+    queryFn: () => this.constructorService.getOlap(this.currentPageId),
+    staleTime: 60 * 1000, // 1 minute
+    refetchOnWindowFocus: true,
+    onDone: (data) => {
+      this.initializeFromFilters(data.filters)
+    },
+    enabled: this.currentPageId !== '',
+  })
+
+  constructor() {
     makeAutoObservable(this)
   }
 
-  // Set current page ID
-  setCurrentPageId(pageId: string) {
+  setCurrentPageId(pageId: string): void {
     this.currentPageId = pageId
   }
 
-  // Create a new OLAP report
-  createNewOlapReport(filters: OlapReportFiltersType[], physicalName: string, versionName: string) {
+  createNewOlapReport(filters: OlapReportFiltersType[], physicalName: string): string {
     const pageId = nanoid()
     this.currentPageId = pageId
     this.pivotTableConfig.physical_name = physicalName
     this.initializeFromFilters(filters)
 
-    // Add the page to the page manager
-    this.rootStore.pageManager.addPage({
-      pageId,
-      versionName,
-      timemark: new Date().toISOString(),
-      physicalName,
-    })
-
     return pageId
   }
 
-  // Initialize attributes from filters (when loading a report)
-  initializeFromFilters(filters: OlapReportFiltersType[], fieldsForPivotTable = {}) {
+  initializeFromFilters(filters: OlapReportFiltersType[], fieldsForPivotTable = {}): void {
     const allAttributes = createAtrributeFilters(filters, fieldsForPivotTable)
     this.allAttributes = getSortedAllAttributes(allAttributes)
     this.updateTableConfiguratorFromAttributes()
   }
 
-  // Load existing OLAP report
-  loadExistingOlapReport(olapData: any) {
+  loadExistingOlapReport(olapData: any): string {
     const pageId = nanoid()
     this.currentPageId = pageId
 
@@ -88,11 +98,8 @@ export class OlapConfigStore {
       filters,
       version_request: versionRequest,
       table,
-      version_name: versionName,
-      timemark,
     } = olapData
 
-    // Extract configuration from version_request
     const { rows, columns, values, aggfunc, physical_name } = versionRequest || {}
 
     this.pivotTableConfig = {
@@ -103,27 +110,16 @@ export class OlapConfigStore {
       physical_name: physical_name || '',
     }
 
-    // Initialize attributes from filters
     this.initializeFromFilters(filters, versionRequest)
 
-    // Set table data
     if (table) {
       this.pivotTableData = table
     }
 
-    // Add the page to the page manager
-    this.rootStore.pageManager.addPage({
-      pageId,
-      versionName,
-      timemark,
-      physicalName: physical_name || '',
-    })
-
     return pageId
   }
 
-  // Computed properties to get attributes by type
-  get getFiltersByType() {
+  get getFiltersByType(): FiltersByType {
     return {
       rows: this.allAttributes.filter(item => item.type === ATTRIBUTES_TYPES.ROWS),
       columns: this.allAttributes.filter(item => item.type === ATTRIBUTES_TYPES.COLUMNS),
@@ -131,11 +127,9 @@ export class OlapConfigStore {
     }
   }
 
-  // Update attributes and recalculate configurator
-  updateTableConfiguratorFromAttributes() {
+  updateTableConfiguratorFromAttributes(): void {
     const tableConfigurator = updateTableConfigurator(this.allAttributes)
 
-    // Update pivot table config with new attributes
     this.updatePivotTableConfig(
       tableConfigurator.rows.map(item => item.attributeName),
       tableConfigurator.columns.map(item => item.attributeName),
@@ -143,8 +137,7 @@ export class OlapConfigStore {
     )
   }
 
-  // Update pivot table config (used for API requests)
-  updatePivotTableConfig(rows?: string[], columns?: string[], values?: string[]) {
+  updatePivotTableConfig(rows?: string[], columns?: string[], values?: string[]): void {
     if (rows)
       this.pivotTableConfig.rows = rows
     if (columns)
@@ -153,11 +146,9 @@ export class OlapConfigStore {
       this.pivotTableConfig.values = values
   }
 
-  // Change attribute type (e.g., move from rows to columns)
-  updateAttributeType(attribute: string, type: string) {
+  updateAttributeType(attribute: string, type: string): void {
     this.allAttributes = this.allAttributes.map((item) => {
       if (item.attributeName === attribute) {
-        // Reset selected values when moving to VALUES
         const selectedAttributeValues
           = type === ATTRIBUTES_TYPES.VALUES && item.selectedAttributeValues?.length > 0
             ? DEFAULT_STATE.ARRAY
@@ -168,13 +159,11 @@ export class OlapConfigStore {
       return item
     })
 
-    // Resort and update configurator
     this.allAttributes = getSortedAllAttributes(this.allAttributes)
     this.updateTableConfiguratorFromAttributes()
   }
 
-  // Remove attribute from pivot table configurator
-  deleteAttributeFromTableConfigurator(attribute: string) {
+  deleteAttributeFromTableConfigurator(attribute: string): void {
     this.allAttributes = this.allAttributes.map(item =>
       item.attributeName === attribute
         ? { ...item, type: ATTRIBUTES_TYPES.NOT_ASSIGNED }
@@ -185,15 +174,12 @@ export class OlapConfigStore {
     this.updateTableConfiguratorFromAttributes()
   }
 
-  // Update attribute order within a category (rows, columns, values)
-  setTableConfiguratorFields(type: string, updatedAttributes: ConstructorAttributeType[]) {
-    // Update the store with the new order of attributes
+  setTableConfiguratorFields(type: string, updatedAttributes: ConstructorAttributeType[]): void {
     this.allAttributes = this.allAttributes.map((item) => {
       const updatedItem = updatedAttributes.find(attr => attr.attributeId === item.attributeId)
       return updatedItem && item.type === type ? updatedItem : item
     })
 
-    // Update configuration
     const attributeNames = updatedAttributes.map(item => item.attributeName)
     if (type === 'rows')
       this.pivotTableConfig.rows = attributeNames
@@ -203,13 +189,12 @@ export class OlapConfigStore {
       this.pivotTableConfig.values = attributeNames
   }
 
-  // Set attribute modal content (for selecting values of an attribute)
   setConstructorAttributeModalContent(
     parametrs: string[],
     selectedParametrs: string[],
     attributePlaceholder: string,
     attributeName: string,
-  ) {
+  ): void {
     this.attributeModal = {
       parametrs,
       selectedParametrs,
@@ -218,8 +203,7 @@ export class OlapConfigStore {
     }
   }
 
-  // Set selected values for an attribute
-  setAttributeSelectedValues(attributeName: string, selectedAttributeValues: string[]) {
+  setAttributeSelectedValues(attributeName: string, selectedAttributeValues: string[]): void {
     this.allAttributes = this.allAttributes.map(item =>
       item.attributeName === attributeName
         ? { ...item, selectedAttributeValues }
@@ -230,13 +214,11 @@ export class OlapConfigStore {
     this.updateTableConfiguratorFromAttributes()
   }
 
-  // Set aggregation functions for pivot table
-  setAggregationFunctionsForPivotTable(parametrs: string[]) {
+  setAggregationFunctionsForPivotTable(parametrs: string[]): void {
     this.pivotTableConfig.aggfunc = parametrs
   }
 
-  // Update pivot table URL parameters
-  setPivotTableUrlParams(type: string, fields: string[]) {
+  setPivotTableUrlParams(type: string, fields: string[]): void {
     if (type === 'rows')
       this.pivotTableConfig.rows = fields
     if (type === 'columns')
@@ -247,13 +229,19 @@ export class OlapConfigStore {
       this.pivotTableConfig.aggfunc = fields
   }
 
-  // Set pivot table data after retrieval from API
-  setPagePivotTable(pivotTable: PivotTableType) {
-    this.pivotTableData = pivotTable
+  getPivotTable(): PivotTableType | null {
+    return this.olapQuery.result.data?.table || null
   }
 
-  // Reset all configuration
-  resetConfiguration() {
+  getPivotTableLoading(): boolean {
+    return this.olapQuery.result.isLoading
+  }
+
+  getPivotTableFetching(): boolean {
+    return this.olapQuery.result.isFetching
+  }
+
+  resetConfiguration(): void {
     this.allAttributes = []
     this.attributeModal = null
     this.pivotTableConfig = {
@@ -266,3 +254,5 @@ export class OlapConfigStore {
     this.pivotTableData = null
   }
 }
+
+export const Constructor = new ConstructorStore()

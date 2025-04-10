@@ -1,34 +1,32 @@
-// src/components/Pages/OlapReportBuilderPage/components/PivotTableHeader/PivotTableHeader.tsx
 import type { FC } from 'react'
 
+// src/components/Pages/OlapReportBuilderPage/components/PivotTableHeader/PivotTableHeader.tsx
+import { useState } from 'react'
 import { observer } from 'mobx-react-lite'
 import { Button, Spin, Typography } from '@tinkerbells/xenon-ui'
 
 import '../../table-builder.scss'
+
+import { Constructor } from '@/controllers/ConstructorStore'
+
 import { formatDate } from '../../utils/utils'
 import { DEFAULT_STATE } from '../../../../../consts/globalConsts'
 import { useGetTableForTables, useSaveOlap } from '../../../../../api/queryHooks'
-import { useOlapConfigStore, usePageManager } from '../../../../../stores/RootStore'
 
 interface OlapReportHeaderType {
   pageId: string
 }
 
 export const PivotTableHeader: FC<OlapReportHeaderType> = observer((props) => {
-  const { pageId } = props
-
-  // Use MobX stores instead of Redux
-  const olapConfigStore = useOlapConfigStore()
-  const pageManager = usePageManager()
-
   // Get page details from MobX stores
-  const pageDetails = pageManager.getPage(pageId)
-  const pivotTableConfig = olapConfigStore.pivotTableConfig
+  const [store] = useState(Constructor)
+
+  const pivotTableConfig = store.pivotTableConfig
 
   // Get values from page details
   const datasetId = 0
-  const timemark = pageDetails?.timemark || ''
-  const title = pageDetails?.versionName || ''
+  const timemark = ''
+  const title = ''
   const date = timemark ? formatDate(timemark) : DEFAULT_STATE.STRING
 
   // Use React Query hooks instead of RTK Query

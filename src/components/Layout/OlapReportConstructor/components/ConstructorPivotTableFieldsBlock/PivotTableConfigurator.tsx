@@ -47,11 +47,13 @@ import {
   Typography,
 } from '@tinkerbells/xenon-ui'
 
-import type { ConstructorAttributeType, ConstructorPivotTableConfiguratorType } from '../../../../../types/olapReportPage'
+import { Constructor } from '@/controllers/ConstructorStore'
 
 import './../../table-constructor.scss'
+
+import type { ConstructorAttributeType, ConstructorPivotTableConfiguratorType } from '../../../../../types/olapReportPage'
+
 import { DEFAULT_STATE } from '../../../../../consts/globalConsts'
-import { useOlapConfigStore } from '../../../../../stores/RootStore'
 import { ArrowButton, CloseButton } from '../../../../../assets/Icons'
 import { ConstructorAttributeValuesModal } from './ConstructorAttributeValuesModal'
 import {
@@ -76,7 +78,7 @@ export const PivotTableConfigurator: FC<Props> = observer(({
   stats,
 }) => {
   // Use MobX store instead of Redux
-  const olapConfigStore = useOlapConfigStore()
+  const [store] = useState(Constructor)
 
   const [configuratorData, setConfiguratorData] = useState<ConstructorAttributeType[]>(DEFAULT_STATE.ARRAY)
 
@@ -91,9 +93,9 @@ export const PivotTableConfigurator: FC<Props> = observer(({
     if (attributes) {
       setConfiguratorData(attributes)
       // Call MobX store method instead of dispatching Redux action
-      olapConfigStore.setPivotTableUrlParams(type, attributes.map(item => item.attributeName))
+      store.setPivotTableUrlParams(type, attributes.map(item => item.attributeName))
     }
-  }, [attributes, olapConfigStore, type])
+  }, [attributes, store, type])
 
   const columns = useMemo<ColumnDef<ConstructorAttributeType>[]>(
     () => [
@@ -187,7 +189,7 @@ export const PivotTableConfigurator: FC<Props> = observer(({
                 variant="ghost"
                 id={`closeButton-${attributeName}`}
                 className="sub-item__table-button sub-item__table-close-button"
-                onClick={() => handleDeleteAttribute(attributeName)}
+                onClick={() => store.deleteAttributeFromTableConfigurator(attributeName)}
               >
                 <CloseButton />
               </Button>
@@ -212,7 +214,7 @@ export const PivotTableConfigurator: FC<Props> = observer(({
                     style={{ marginRight: '10px' }}
                     variant="ghost"
                     className="table-button sub-item__table-button"
-                    onClick={() => handleChangePopoverContent(row.original)}
+                    onClick={() => store.deleteAttributeFromTableConfigurator(row.original)}
                   >
                     <ArrowButton />
                   </Button>
@@ -261,8 +263,8 @@ export const PivotTableConfigurator: FC<Props> = observer(({
         const newData = arrayMove(prevData, oldIndex, newIndex)
 
         // Update MobX store instead of dispatching Redux actions
-        olapConfigStore.setTableConfiguratorFields(type, newData)
-        olapConfigStore.setPivotTableUrlParams(type, newData.map(item => item.attributeName))
+        store.setTableConfiguratorFields(type, newData)
+        store.setPivotTableUrlParams(type, newData.map(item => item.attributeName))
 
         return newData
       })
@@ -271,7 +273,7 @@ export const PivotTableConfigurator: FC<Props> = observer(({
 
   const handleDeleteAttribute = (attribute: string) => {
     // Call MobX store method instead of dispatching Redux action
-    olapConfigStore.deleteAttributeFromTableConfigurator(attribute)
+    store.deleteAttributeFromTableConfigurator(attribute)
   }
 
   const handleChangePopoverContent = (
@@ -280,7 +282,7 @@ export const PivotTableConfigurator: FC<Props> = observer(({
     const { attributeValues, selectedAttributeValues, attributePlaceholder, attributeName } = rowData
 
     // Call MobX store method instead of dispatching Redux action
-    olapConfigStore.setConstructorAttributeModalContent(
+    store.setConstructorAttributeModalContent(
       attributeValues,
       selectedAttributeValues,
       attributePlaceholder,

@@ -1,33 +1,31 @@
-import { useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
+import { useEffect, useState } from 'react'
 import { Content } from '@tinkerbells/xenon-ui'
 import { Outlet } from '@tanstack/react-router'
 
 import './main-page.scss'
+
+import { Dataset } from '@/controllers/DatasetStore'
+
 import { TablePanel } from './ui/TablePanel'
-import { useDatasetStore } from '../../../stores/RootStore'
 import { TablesListView } from './components/TablesListView'
 import { TableVersionsView } from './components/TableVersionsView'
-import { useGetTableForTables, useGetVersionsForTable } from '../../../api/queryHooks'
 
-// Using observer to automatically re-render when MobX observables change
 export const MainPage = observer(() => {
-  const datasetStore = useDatasetStore()
-  const datasetId = datasetStore.dbTableDataset.id
+  const [store] = useState(Dataset)
+  const datasetId = store.dbTableDataset.id
 
-  // Use React Query hooks for data fetching
-  const { data: dbTablesData = [], isLoading: tablesLoading } = useGetTableForTables()
-  const { data: tableVersionsData = [], isLoading: versionsLoading } = useGetVersionsForTable(datasetId)
+  const { data: dbTablesData = [], isLoading: tablesLoading } = store.tablesForTablesQuery.result
+  const { data: tableVersionsData = [], isLoading: versionsLoading } = store.versionsForTableQuery.result
 
-  // Initialize datasetStore with first table when data is loaded
   useEffect(() => {
     if (dbTablesData.length > 0 && datasetId === 0) {
-      datasetStore.updateSelectedTableDataset(
+      store.updateSelectedTableDataset(
         dbTablesData[0].id,
         dbTablesData[0].physical_name,
       )
     }
-  }, [dbTablesData, datasetId, datasetStore])
+  }, [dbTablesData, datasetId, store])
 
   return (
     <Content className="container">

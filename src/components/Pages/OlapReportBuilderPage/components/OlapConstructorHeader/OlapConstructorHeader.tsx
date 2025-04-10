@@ -6,8 +6,8 @@ import { Outlet } from '@tanstack/react-router'
 import { Button, Flex, Typography } from '@tinkerbells/xenon-ui'
 
 import { DEFAULT_STATE } from '@/consts/globalConsts'
-import { useOlapConfigStore } from '@/stores/RootStore'
 import { ATTRIBUTES_TYPES } from '@/consts/pivotTableConsts'
+import { Constructor } from '@/controllers/ConstructorStore'
 import { ArrowDownOutlined, ArrowUpOutlined } from '@/assets/Icons'
 import { OlapReportConstructor } from '@/components/Layout/OlapReportConstructor/OlapReportConstructor'
 
@@ -20,9 +20,7 @@ export const OlapConstructorHeader: FC<Props> = observer(({ handleCollapse, page
   const [isOpen, setIsOpen] = useState(true)
   const [attributesCount, setAttributesCount] = useState(DEFAULT_STATE.NUMBER)
 
-  const olapConfigStore = useOlapConfigStore()
-
-  const allAttributes = olapConfigStore.allAttributes
+  const [{ allAttributes }] = useState(Constructor)
   const selectedAttributesTitle = `(Использовано: ${attributesCount})`
 
   useEffect(() => {

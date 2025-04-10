@@ -6,6 +6,7 @@ import type {
 
 import { useMemo, useState } from 'react'
 import { observer } from 'mobx-react-lite'
+import { useNavigate } from '@tanstack/react-router'
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -27,19 +28,15 @@ import { formatDate } from '../utils/utils'
 import { CreateTableModal } from './CreateTableModal'
 import { DataTable } from '../../../UI/DataTable/DataTable'
 import { InfoCircleOutlined } from '../../../../assets/Icons'
-import { usePageManager } from '../../../../stores/RootStore'
-import { useLoadOlapReport } from '../../../../api/useOlapQueries'
 import { EmptyTableWithHeader } from '../../../UI/DataTable/EmptyTableWithHeader'
 
 interface TableVersionsProps {
   tableData: DBTableVersionApiType[]
   isLoading: boolean
 }
-const maxTablePagesCount = 5
 
 export const TableVersionsView: FC<TableVersionsProps> = observer(({ tableData, isLoading }) => {
-  // Use MobX stores
-  const pageManager = usePageManager()
+  const navigate = useNavigate()
 
   // Component state
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
@@ -50,17 +47,6 @@ export const TableVersionsView: FC<TableVersionsProps> = observer(({ tableData, 
     key => rowSelection[key],
   )
   const selectedVersionId = selectedKey ? Number(selectedKey) : 0
-
-  // Check if buttons should be active
-  const currentOpenPages = pageManager.openPages
-  const isCreateTableButtonActive = currentOpenPages.length < maxTablePagesCount
-  const isChooseButtonActive
-    = tableData.length !== 0
-      && currentOpenPages.length < maxTablePagesCount
-      && selectedVersionId !== 0
-
-  // Use the custom hook for loading OLAP reports
-  const { loadOlapReport } = useLoadOlapReport()
 
   const columns = useMemo<ColumnDef<DBTableVersionApiType>[]>(
     () => [
@@ -148,22 +134,14 @@ export const TableVersionsView: FC<TableVersionsProps> = observer(({ tableData, 
     setIsModalOpen(false)
   }
 
-  const handleGetOlap = async () => {
+  // Direct navigation to OLAP report page
+  const handleNavigateToOlapReport = () => {
     if (selectedVersionId) {
-      try {
-        // Load OLAP report using React Query hook
-        const data = await loadOlapReport(selectedVersionId)
-
-        if (!data) {
-          console.error('No data received from the API')
-        }
-
-        // Navigate to the new page (loadOlapReport already handles store updates)
-        // No need to dispatch action as the hook already updates the MobX store
-      }
-      catch (error) {
-        console.error('Error loading OLAP report:', error)
-      }
+      // Navigate directly to the page, letting the route handle data loading
+      navigate({
+        to: '/olapReport/$pageId',
+        params: { pageId: selectedVersionId.toString() },
+      })
     }
   }
 
@@ -199,13 +177,11 @@ export const TableVersionsView: FC<TableVersionsProps> = observer(({ tableData, 
         <Button
           variant="outline"
           onClick={showModal}
-          disabled={!isCreateTableButtonActive}
         >
           Создать
         </Button>
         <Button
-          disabled={!isChooseButtonActive}
-          onClick={handleGetOlap}
+          onClick={handleNavigateToOlapReport}
         >
           Выбрать
         </Button>

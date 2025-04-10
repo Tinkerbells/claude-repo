@@ -34,7 +34,7 @@ export function useGetOlap(versionId: number) {
   return useQuery<OlapReportApiType>({
     queryKey: ['olap', versionId],
     queryFn: () => fetchClient(`/olap/get_olap?version_id=${versionId}`),
-    enabled: versionId > 0, // Only run when versionId is valid
+    enabled: versionId > 0,
   })
 }
 

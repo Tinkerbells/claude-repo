@@ -1,11 +1,12 @@
-// src/components/Layout/OlapReportConstructor/components/ConstructorPivotTableFieldsBlock/PivotTableConfiguratorsBlock.tsx
 import type { FC } from 'react'
 
+import { useState } from 'react'
 import { observer } from 'mobx-react-lite'
+
+import { Constructor } from '@/controllers/ConstructorStore'
 
 import { PivotTableConfigurator } from './PivotTableConfigurator'
 import { DEFAULT_STATE } from '../../../../../consts/globalConsts'
-import { useOlapConfigStore } from '../../../../../stores/RootStore'
 
 interface PivotTableConfiguratorsBlockProps {
   pageId: string
@@ -13,10 +14,10 @@ interface PivotTableConfiguratorsBlockProps {
 
 export const PivotTableConfiguratorsBlock: FC<PivotTableConfiguratorsBlockProps> = observer(({ pageId }) => {
   // Use MobX store instead of Redux with usePageParams
-  const olapConfigStore = useOlapConfigStore()
+  const [store] = useState(Constructor)
 
   // Get filtered attributes from MobX store computed property
-  const filtersByType = olapConfigStore.getFiltersByType
+  const filtersByType = store.getFiltersByType
 
   // Safely access the attributes or use default empty array
   const rows = filtersByType.rows ?? DEFAULT_STATE.ARRAY
