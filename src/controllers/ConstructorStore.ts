@@ -53,7 +53,7 @@ class ConstructorStore {
 
   pivotTableData: PivotTableType | null = null
 
-  currentPageId: string = '2'
+  currentPageId: string = ''
 
   olapQuery: MobxQuery<OlapReportApiType, Error> = new MobxQuery({
     queryClient,
@@ -64,10 +64,11 @@ class ConstructorStore {
     onDone: (data) => {
       this.initializeFromFilters(data.filters)
     },
-    enabled: this.currentPageId !== '',
+    enabled: () => this.currentPageId !== '',
   })
 
-  constructor() {
+  constructor(currentPage?: string) {
+    this.currentPageId = currentPage || ''
     makeAutoObservable(this)
   }
 

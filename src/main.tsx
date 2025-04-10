@@ -19,9 +19,9 @@ export const queryClient = new MobxQueryClient({
     queries: {
       throwOnError: true,
       queryKeyHashFn: hashKey,
-      refetchOnWindowFocus: 'always',
+      refetchOnWindowFocus: false,
       refetchOnReconnect: 'always',
-      staleTime: 5 * 60 * 1000, // 5 mins
+      staleTime: 30 * 60 * 1000, // 5 mins
       retry: (failureCount, error) => {
         if ('status' in error && Number(error.status) >= 500) {
           return MAX_FAILURE_COUNT - failureCount > 0

@@ -18,7 +18,7 @@ class DatasetStore {
     physicalName: '',
   }
 
-  selectedVersionId: number = 2
+  selectedVersionId: number = 7
   datasetId: string = ''
 
   tablesForTablesQuery: MobxQuery<DBTableDatasetAPiType[], Error> = new MobxQuery({

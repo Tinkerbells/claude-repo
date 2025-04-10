@@ -22,6 +22,8 @@ import {
   Typography,
 } from '@tinkerbells/xenon-ui'
 
+import { PageManager } from '@/controllers/PageManagerStore'
+
 import type { DBTableVersionApiType } from '../../../../types/api'
 
 import { formatDate } from '../utils/utils'
@@ -137,11 +139,24 @@ export const TableVersionsView: FC<TableVersionsProps> = observer(({ tableData, 
   // Direct navigation to OLAP report page
   const handleNavigateToOlapReport = () => {
     if (selectedVersionId) {
-      // Navigate directly to the page, letting the route handle data loading
-      navigate({
-        to: '/olapReport/$pageId',
-        params: { pageId: selectedVersionId.toString() },
-      })
+    // Находим выбранную версию в данных
+      const selectedVersion = tableData.find(item => item.id === selectedVersionId)
+
+      if (selectedVersion) {
+      // Добавляем страницу в PageManager
+        PageManager.addPage({
+          pageId: selectedVersionId.toString(),
+          versionName: selectedVersion.version_name,
+          timemark: selectedVersion.timemark,
+          physicalName: selectedVersion.dataset_id.toString(), // Используем dataset_id как physicalName
+        })
+
+        // Навигация к странице отчета
+        navigate({
+          to: '/olapReport/$pageId',
+          params: { pageId: selectedVersionId.toString() },
+        })
+      }
     }
   }
 

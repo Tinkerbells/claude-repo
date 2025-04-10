@@ -1,8 +1,9 @@
 import type { FC } from 'react'
 
 import { observer } from 'mobx-react-lite'
-import { useNavigate } from '@tanstack/react-router'
 import { Button, Modal, Typography } from '@tinkerbells/xenon-ui'
+
+import { PageManager } from '@/controllers/PageManagerStore'
 
 interface MenuModalProps {
   isModalOpen: boolean
@@ -12,16 +13,15 @@ interface MenuModalProps {
 }
 
 export const MenuModal: FC<MenuModalProps> = observer((props) => {
-  const { isModalOpen, handleOk, handleCancel } = props
-  const navigate = useNavigate()
+  const { isModalOpen, handleOk, handleCancel, pageId } = props
 
-  const handleDeleteOlap = () => {
-    navigate({ to: '/' })
-  }
+  // Получаем информацию о странице из PageManager
+  const page = PageManager.getPage(pageId)
+  const pageName = page?.versionName || `Отчет ${pageId.slice(0, 6)}`
 
   return (
     <Modal
-      title="Вы действительно хотите закрыть эту страницу?"
+      title={`Закрыть страницу "${pageName}"?`}
       open={isModalOpen}
       onOk={handleOk}
       onCancel={handleCancel}
@@ -30,22 +30,15 @@ export const MenuModal: FC<MenuModalProps> = observer((props) => {
           key="back"
           variant="outline"
           className="create-table-modal__button"
-          onClick={() => {
-            handleCancel()
-            handleDeleteOlap()
-          }}
+          onClick={handleCancel}
         >
-          Выйти без сохранения
+          Отмена
         </Button>,
         <Button
           key="submit"
-          // onClick to save the OLAP report
-          onClick={() => {
-            // Could add saving logic here using MobX store
-            handleOk()
-          }}
+          onClick={handleOk}
         >
-          Сохранить
+          Закрыть
         </Button>,
       ]}
     >
